@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plantilla y Diseñador de Curriculum Vitae Interactivo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        warmbg: '#FAF8F5',
+                        warmcard: '#FFFFFF',
+                        warmborder: '#E8E2D9',
+                        brand: {
+                            primary: '#2C3E35', // Deep Forest / Slate
+                            secondary: '#7A8B7B', // Muted Sage
+                            accent: '#C88D66', // Warm Terracotta
+                            dark: '#1C2826',
+                            light: '#F4F0EA'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['System-UI', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Embedded custom styles for canvas containers and print rendering */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 200px;
+            max-height: 220px;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-area {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .page-break {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Custom scrollbar for editor */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F4F0EA;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #C5BCB0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-warmbg text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Warm Neutral Harmony (Deep Sage #2C3E35, Soft Sage #7A8B7B, Warm Terracotta #C88D66, Off-White #FAF8F5) -->
+    <!-- Application Structure Plan: Designed as a dynamic dual-pane application. The left pane provides an intuitive control suite (Tabbed sections for Datos Personales, Experiencia, Educación, Habilidades, Estilo/Plantilla, y Análisis ATS). The right pane displays a live pixel-perfect print-ready CV preview. Chart.js is utilized for live Skills Balance analysis and CV Completeness/ATS Score. -->
+    <!-- Visualization & Content Choices: Used Chart.js Canvas Doughnut for ATS Optimization Meter and Polar Area Chart for Skill Matrix Balance. Experience items feature dynamic CSS timelines. NO SVG used (Unicode icons utilized instead). Supports multiple professional layout variations. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-warmborder sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📄</span>
+                <div>
+                    <h1 class="text-lg font-bold text-brand-dark leading-tight">Plataforma de CV Interactivo</h1>
+                    <p class="text-xs text-gray-500">Diseñador, Optimización ATS y Vista Previa en Tiempo Real</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="loadSampleData()" class="px-3 py-1.5 text-xs sm:text-sm font-medium text-brand-primary bg-brand-light hover:bg-warmborder rounded-md transition">
+                    🔄 Cargar Ejemplo
+                </button>
+                <button onclick="resetForm()" class="px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-600 hover:text-red-600 transition">
+                    🗑️ Limpiar
+                </button>
+                <button onclick="window.print()" class="px-4 py-1.5 text-xs sm:text-sm font-semibold text-white bg-brand-primary hover:bg-brand-dark rounded-md shadow-sm transition flex items-center gap-1.5">
+                    <span>🖨️</span> Exportar PDF / Imprimir
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-2 sm:px-4 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- LEFT PANEL: Controls & Form Editor (Hidden during print) -->
+        <section class="lg:w-5/12 w-full bg-warmcard rounded-xl border border-warmborder shadow-sm flex flex-col h-[calc(100vh-6rem)] sticky top-20 no-print">
+            
+            <!-- Editor Navigation Tabs -->
+            <div class="flex border-b border-warmborder overflow-x-auto text-xs sm:text-sm font-medium text-gray-600 custom-scrollbar bg-warmbg rounded-t-xl">
+                <button onclick="switchTab('datos')" id="tab-datos" class="px-4 py-3 border-b-2 border-brand-primary text-brand-primary font-bold whitespace-nowrap">
+                    👤 Perfil
+                </button>
+                <button onclick="switchTab('experiencia')" id="tab-experiencia" class="px-4 py-3 border-b-2 border-transparent hover:text-brand-primary whitespace-nowrap">
+                    💼 Experiencia
+                </button>
+                <button onclick="switchTab('educacion')" id="tab-educacion" class="px-4 py-3 border-b-2 border-transparent hover:text-brand-primary whitespace-nowrap">
+                    🎓 Educación
+                </button>
+                <button onclick="switchTab('habilidades')" id="tab-habilidades" class="px-4 py-3 border-b-2 border-transparent hover:text-brand-primary whitespace-nowrap">
+                    🛠️ Habilidades
+                </button>
+                <button onclick="switchTab('diseno')" id="tab-diseno" class="px-4 py-3 border-b-2 border-transparent hover:text-brand-primary whitespace-nowrap">
+                    🎨 Estilo & ATS
+                </button>
+            </div>
+
+            <!-- Editor Form Content Area -->
+            <div class="p-4 sm:p-5 overflow-y-auto flex-grow custom-scrollbar space-y-6">
+
+                <!-- TAB 1: DATOS PERSONALES -->
+                <div id="panel-datos" class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2">Información Personal</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre Completo</label>
+                        <input type="text" id="in-fullName" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Ej. Ana María García">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Título Profesional</label>
+                        <input type="text" id="in-jobTitle" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Ej. Ingeniera de Software & Líder Técnica">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Correo Electrónico</label>
+                            <input type="email" id="in-email" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="ana.garcia@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Teléfono</label>
+                            <input type="text" id="in-phone" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="+34 612 345 678">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Ubicación (Ciudad, País)</label>
+                            <input type="text" id="in-location" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Madrid, España">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">LinkedIn / Sitio Web</label>
+                            <input type="text" id="in-website" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="linkedin.com/in/anagarcia">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Perfil Profesional / Extracto</label>
+                        <textarea id="in-summary" oninput="updateCV()" rows="4" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Breve resumen de 3-4 líneas destacando tu valor, logros y especialidad..."></textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 2: EXPERIENCIA LABORAL -->
+                <div id="panel-experiencia" class="hidden space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Experiencia Laboral</h3>
+                        <button onclick="addExperienceItem()" class="text-xs px-2.5 py-1 bg-brand-primary text-white rounded hover:bg-brand-dark transition">+ Agregar Puesto</button>
+                    </div>
+                    <div id="experience-list-form" class="space-y-4">
+                        <!-- Dynamic experience forms injected here -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: EDUCACIÓN -->
+                <div id="panel-educacion" class="hidden space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Educación y Formación</h3>
+                        <button onclick="addEducationItem()" class="text-xs px-2.5 py-1 bg-brand-primary text-white rounded hover:bg-brand-dark transition">+ Agregar Estudios</button>
+                    </div>
+                    <div id="education-list-form" class="space-y-4">
+                        <!-- Dynamic education forms injected here -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: HABILIDADES & CERTIFICACIONES -->
+                <div id="panel-habilidades" class="hidden space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2">Habilidades Técnicas & Blandas</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Habilidades Técnicas (Hard Skills - separadas por coma)</label>
+                        <input type="text" id="in-hardSkills" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="JavaScript, Python, SQL, Análisis de Datos, Git">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Habilidades Blandas (Soft Skills - separadas por coma)</label>
+                        <input type="text" id="in-softSkills" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Liderazgo, Trabajo en Equipo, Comunicación, Resolución de Problemas">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Idiomas (separados por coma)</label>
+                        <input type="text" id="in-languages" oninput="updateCV()" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="Español (Nativo), Inglés (C1 Profesional), Francés (B1)">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Certificaciones o Cursos Destacados</label>
+                        <textarea id="in-certifications" oninput="updateCV()" rows="3" class="w-full text-sm p-2 border border-warmborder rounded-lg focus:ring-2 focus:ring-brand-primary focus:outline-none" placeholder="• AWS Certified Solutions Architect (2023)&#10;• Certificación Scrum Master (2022)"></textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 5: DISEÑO Y ANÁLISIS ATS -->
+                <div id="panel-diseno" class="hidden space-y-5">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Estilo de Plantilla</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setTemplateStyle('modern')" id="tpl-modern" class="p-2 text-xs border border-brand-primary bg-brand-light font-bold rounded text-left">
+                                ✨ Moderno Ejecutivo
+                            </button>
+                            <button onclick="setTemplateStyle('minimal')" id="tpl-minimal" class="p-2 text-xs border border-warmborder hover:bg-gray-50 rounded text-left">
+                                📄 Minimalista Clásico
+                            </button>
+                            <button onclick="setTemplateStyle('two-column')" id="tpl-two-column" class="p-2 text-xs border border-warmborder hover:bg-gray-50 rounded text-left">
+                                📊 Doble Columna
+                            </button>
+                            <button onclick="setTemplateStyle('accent')" id="tpl-accent" class="p-2 text-xs border border-warmborder hover:bg-gray-50 rounded text-left">
+                                🎨 Destacado Creativo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-warmborder pt-4">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Paleta de Colores Destacados</h3>
+                        <div class="flex gap-3">
+                            <button onclick="setThemeColor('#2C3E35')" class="w-8 h-8 rounded-full bg-[#2C3E35] ring-2 ring-offset-2 ring-transparent focus:ring-gray-400" title="Bosque / Verde Oscuro"></button>
+                            <button onclick="setThemeColor('#1E3A8A')" class="w-8 h-8 rounded-full bg-[#1E3A8A] ring-2 ring-offset-2 ring-transparent focus:ring-gray-400" title="Azul Marino Executive"></button>
+                            <button onclick="setThemeColor('#374151')" class="w-8 h-8 rounded-full bg-[#374151] ring-2 ring-offset-2 ring-transparent focus:ring-gray-400" title="Gris Carbón"></button>
+                            <button onclick="setThemeColor('#8C3A27')" class="w-8 h-8 rounded-full bg-[#8C3A27] ring-2 ring-offset-2 ring-transparent focus:ring-gray-400" title="Terracota"></button>
+                        </div>
+                    </div>
+
+                    <!-- ATS & Diagnostic Metrics -->
+                    <div class="border-t border-warmborder pt-4">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 mb-3">Diagnóstico y Optimización ATS</h3>
+                        <p class="text-xs text-gray-600 mb-3">El indicador evalúa la densidad de información, estructuración y probabilidad de lectura exitosa por sistemas ATS.</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-warmbg p-3 rounded-lg border border-warmborder">
+                            <div>
+                                <div class="chart-container">
+                                    <canvas id="atsGaugeChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="text-xs space-y-1.5">
+                                <div class="font-bold text-gray-800" id="ats-rating-text">Estado: Bueno (75%)</div>
+                                <ul class="text-gray-600 space-y-1 text-[11px]" id="ats-recommendations">
+                                    <!-- Injected feedback -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: Live CV Preview Area -->
+        <section class="lg:w-7/12 w-full flex flex-col items-center">
+            
+            <!-- Context Banner -->
+            <div class="w-full bg-white p-4 rounded-xl border border-warmborder mb-4 text-xs text-gray-600 flex justify-between items-center no-print shadow-sm">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">👁️</span>
+                    <span><strong>Vista Previa Dinámica:</strong> Edita la plantilla desde el panel izquierdo. Los cambios se reflejarán inmediatamente.</span>
+                </div>
+                <span class="text-gray-400 text-[11px] hidden sm:inline">Formato A4 Estándar</span>
+            </div>
+
+            <!-- CV Document Container (A4 Proportional Preview & Print Target) -->
+            <div id="cv-preview" class="print-area w-full bg-white shadow-xl rounded-sm border border-gray-200 p-8 sm:p-12 transition-all duration-300 min-h-[900px] text-gray-800">
+                <!-- Dynamically Rendered CV Content -->
+            </div>
+
+            <!-- Skills Balance Chart Visualization Card (Appears under preview on screen) -->
+            <div class="w-full bg-white rounded-xl border border-warmborder p-5 mt-6 no-print shadow-sm">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Equilibrio del Perfil Profesional (Análisis Visual)</h4>
+                <p class="text-xs text-gray-600 mb-4">Esta gráfica analiza la distribución entre competencias técnicas, blandas, experiencia documentada y formación.</p>
+                <div class="chart-container" style="max-width: 450px; height: 220px;">
+                    <canvas id="skillsRadarChart"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-warmborder py-4 mt-8 no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500">
+            Plantilla e Instrumento de Curriculum Vitae Profesional • Listo para descargar en PDF mediante diálogo de impresión del navegador.
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State Management Object
+        let cvData = {
+            fullName: "Alejandro Morales Ríos",
+            jobTitle: "Líder Técnico de Software & Arquitecto Web",
+            email: "alejandro.morales@ejemplo.com",
+            phone: "+34 612 987 654",
+            location: "Barcelona, España",
+            website: "linkedin.com/in/amorales-dev",
+            summary: "Arquitecto de software con más de 8 años de experiencia liderando equipos multidisciplinarios en el diseño y escalado de aplicaciones web complejas. Especializado en optimización de rendimiento, arquitectura backend eficiente y metodologías ágiles. Enfocado en generar impacto directo en métricas de negocio.",
+            hardSkills: ["JavaScript / TypeScript", "Node.js", "Python", "React & Vue.js", "Docker & Kubernetes", "Bases de Datos SQL/NoSQL", "Arquitectura Cloud (AWS)"],
+            softSkills: ["Liderazgo de Equipos", "Gestión de Proyectos (Scrum)", "Pensamiento Crítico", "Comunicación Clara", "Resolución de Conflictos"],
+            languages: ["Español (Nativo)", "Inglés (C1 Avanzado)", "Catalán (Competencia profesional)"],
+            certifications: "• AWS Certified Solutions Architect - Associate (2023)\n• Certified ScrumMaster® (CSM) - Scrum Alliance (2021)\n• Diploma en Seguridades Web & OWASP - Tech Institute (2020)",
+            experiences: [
+                {
+                    id: 1,
+                    role: "Líder Técnico & Arquitecto Frontend",
+                    company: "TechNova Solutions",
+                    period: "2021 – Presente",
+                    location: "Barcelona, España",
+                    details: "• Dirijo un equipo de 7 desarrolladores senior en la modernización de la plataforma principal de e-commerce.\n• Reduje el tiempo de carga de la aplicación en un 42% mediante optimización de componentes y caché estratégico.\n• Implementé integración continua (CI/CD) reduciendo el tiempo de despliegue de 2 horas a 15 minutos."
+                },
+                {
+                    id: 2,
+                    role: "Desarrollador Full Stack Senior",
+                    company: "Innova Digital Labs",
+                    period: "2018 – 2021",
+                    location: "Madrid, España",
+                    details: "• Diseñé e implementé microservicios en Node.js y Python procesando más de 500,000 peticiones diarias.\n• Colaboré con los equipos de Producto y UI/UX para rediseñar la experiencia de usuario aumentando la conversión un 18%."
+                }
+            ],
+            education: [
+                {
+                    id: 1,
+                    degree: "Grado en Ingeniería Informática",
+                    institution: "Universidad Politécnica de Cataluña",
+                    period: "2013 – 2017",
+                    details: "Graduado con mención especial en Sistemas Distribuidos y Software de Alto Rendimiento."
+                }
+            ],
+            style: {
+                template: "modern", // 'modern', 'minimal', 'two-column', 'accent'
+                primaryColor: "#2C3E35"
+            }
+        };
+
+        let atsChartInstance = null;
+        let radarChartInstance = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            populateForm();
+            initCharts();
+            updateCV();
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabKey) {
+            const tabs = ['datos', 'experiencia', 'educacion', 'habilidades', 'diseno'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const panel = document.getElementById(`panel-${t}`);
+                if (t === tabKey) {
+                    btn.classList.add('border-brand-primary', 'text-brand-primary', 'font-bold');
+                    btn.classList.remove('border-transparent');
+                    panel.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('border-brand-primary', 'text-brand-primary', 'font-bold');
+                    btn.classList.add('border-transparent');
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+
+        // Populate Form Fields with Current Data
+        function populateForm() {
+            document.getElementById('in-fullName').value = cvData.fullName;
+            document.getElementById('in-jobTitle').value = cvData.jobTitle;
+            document.getElementById('in-email').value = cvData.email;
+            document.getElementById('in-phone').value = cvData.phone;
+            document.getElementById('in-location').value = cvData.location;
+            document.getElementById('in-website').value = cvData.website;
+            document.getElementById('in-summary').value = cvData.summary;
+            document.getElementById('in-hardSkills').value = cvData.hardSkills.join(', ');
+            document.getElementById('in-softSkills').value = cvData.softSkills.join(', ');
+            document.getElementById('in-languages').value = cvData.languages.join(', ');
+            document.getElementById('in-certifications').value = cvData.certifications;
+
+            renderExperienceForms();
+            renderEducationForms();
+        }
+
+        // Render Dynamic Experience Input Forms
+        function renderExperienceForms() {
+            const container = document.getElementById('experience-list-form');
+            container.innerHTML = '';
+            cvData.experiences.forEach((exp, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "p-3 border border-warmborder rounded-lg bg-warmbg space-y-2 relative";
+                itemDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600">Puesto #${index + 1}</span>
+                        <button onclick="removeExperienceItem(${exp.id})" class="text-xs text-red-500 hover:text-red-700">Eliminar</button>
+                    </div>
+                    <input type="text" value="${exp.role}" oninput="updateExpData(${exp.id}, 'role', this.value)" placeholder="Cargo / Puesto" class="w-full text-xs p-1.5 border border-warmborder rounded">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" value="${exp.company}" oninput="updateExpData(${exp.id}, 'company', this.value)" placeholder="Empresa" class="text-xs p-1.5 border border-warmborder rounded">
+                        <input type="text" value="${exp.period}" oninput="updateExpData(${exp.id}, 'period', this.value)" placeholder="Periodo (ej. 2020-Presente)" class="text-xs p-1.5 border border-warmborder rounded">
+                    </div>
+                    <input type="text" value="${exp.location || ''}" oninput="updateExpData(${exp.id}, 'location', this.value)" placeholder="Ubicación" class="text-xs p-1.5 border border-warmborder rounded w-full">
+                    <textarea oninput="updateExpData(${exp.id}, 'details', this.value)" rows="3" placeholder="Responsabilidades y logros (puntos)..." class="w-full text-xs p-1.5 border border-warmborder rounded">${exp.details}</textarea>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Render Dynamic Education Input Forms
+        function renderEducationForms() {
+            const container = document.getElementById('education-list-form');
+            container.innerHTML = '';
+            cvData.education.forEach((edu, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "p-3 border border-warmborder rounded-lg bg-warmbg space-y-2 relative";
+                itemDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600">Estudio #${index + 1}</span>
+                        <button onclick="removeEducationItem(${edu.id})" class="text-xs text-red-500 hover:text-red-700">Eliminar</button>
+                    </div>
+                    <input type="text" value="${edu.degree}" oninput="updateEduData(${edu.id}, 'degree', this.value)" placeholder="Título / Grado OBTENIDO" class="w-full text-xs p-1.5 border border-warmborder rounded">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" value="${edu.institution}" oninput="updateEduData(${edu.id}, 'institution', this.value)" placeholder="Institución / Universidad" class="text-xs p-1.5 border border-warmborder rounded">
+                        <input type="text" value="${edu.period}" oninput="updateEduData(${edu.id}, 'period', this.value)" placeholder="Año / Periodo" class="text-xs p-1.5 border border-warmborder rounded">
+                    </div>
+                    <textarea oninput="updateEduData(${edu.id}, 'details', this.value)" rows="2" placeholder="Detalles opcionales..." class="w-full text-xs p-1.5 border border-warmborder rounded">${edu.details || ''}</textarea>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Add / Remove Handlers
+        function addExperienceItem() {
+            const newId = Date.now();
+            cvData.experiences.push({
+                id: newId,
+                role: "Nuevo Cargo",
+                company: "Nombre de Empresa",
+                period: "2022 – 2023",
+                location: "Ciudad",
+                details: "• Detalle de responsabilidad o logro principal..."
+            });
+            renderExperienceForms();
+            updateCV();
+        }
+
+        function removeExperienceItem(id) {
+            cvData.experiences = cvData.experiences.filter(e => e.id !== id);
+            renderExperienceForms();
+            updateCV();
+        }
+
+        function updateExpData(id, field, value) {
+            const item = cvData.experiences.find(e => e.id === id);
+            if (item) {
+                item[field] = value;
+                updateCV();
+            }
+        }
+
+        function addEducationItem() {
+            const newId = Date.now();
+            cvData.education.push({
+                id: newId,
+                degree: "Título o Certificación",
+                institution: "Nombre de Institución",
+                period: "2020",
+                details: ""
+            });
+            renderEducationForms();
+            updateCV();
+        }
+
+        function removeEducationItem(id) {
+            cvData.education = cvData.education.filter(e => e.id !== id);
+            renderEducationForms();
+            updateCV();
+        }
+
+        function updateEduData(id, field, value) {
+            const item = cvData.education.find(e => e.id === id);
+            if (item) {
+                item[field] = value;
+                updateCV();
+            }
+        }
+
+        // Customization Functions
+        function setTemplateStyle(tpl) {
+            cvData.style.template = tpl;
+            ['modern', 'minimal', 'two-column', 'accent'].forEach(t => {
+                const btn = document.getElementById(`tpl-${t}`);
+                if (btn) {
+                    if (t === tpl) {
+                        btn.className = "p-2 text-xs border border-brand-primary bg-brand-light font-bold rounded text-left";
+                    } else {
+                        btn.className = "p-2 text-xs border border-warmborder hover:bg-gray-50 rounded text-left";
+                    }
+                }
+            });
+            updateCV();
+        }
+
+        function setThemeColor(color) {
+            cvData.style.primaryColor = color;
+            updateCV();
+        }
+
+        // Sync Data from Form to State
+        function syncFormToState() {
+            cvData.fullName = document.getElementById('in-fullName').value;
+            cvData.jobTitle = document.getElementById('in-jobTitle').value;
+            cvData.email = document.getElementById('in-email').value;
+            cvData.phone = document.getElementById('in-phone').value;
+            cvData.location = document.getElementById('in-location').value;
+            cvData.website = document.getElementById('in-website').value;
+            cvData.summary = document.getElementById('in-summary').value;
+            
+            const hardText = document.getElementById('in-hardSkills').value;
+            cvData.hardSkills = hardText ? hardText.split(',').map(s => s.trim()).filter(Boolean) : [];
+            
+            const softText = document.getElementById('in-softSkills').value;
+            cvData.softSkills = softText ? softText.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+            const langText = document.getElementById('in-languages').value;
+            cvData.languages = langText ? langText.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+            cvData.certifications = document.getElementById('in-certifications').value;
+        }
+
+        // Main Rendering Pipeline
+        function updateCV() {
+            syncFormToState();
+            const previewContainer = document.getElementById('cv-preview');
+            const primaryColor = cvData.style.primaryColor || '#2C3E35';
+
+            let htmlContent = '';
+
+            if (cvData.style.template === 'two-column') {
+                htmlContent = renderTwoColumnLayout(primaryColor);
+            } else if (cvData.style.template === 'minimal') {
+                htmlContent = renderMinimalLayout(primaryColor);
+            } else if (cvData.style.template === 'accent') {
+                htmlContent = renderAccentLayout(primaryColor);
+            } else {
+                // Default: Modern
+                htmlContent = renderModernLayout(primaryColor);
+            }
+
+            previewContainer.innerHTML = htmlContent;
+
+            // Refresh Analytical Visualizations
+            updateCharts();
+        }
+
+        // Layout Renderers (Without SVG - pure styled HTML)
+        function renderModernLayout(primaryColor) {
+            return `
+                <div class="space-y-6">
+                    <!-- Header -->
+                    <div class="border-b-2 pb-5" style="border-color: ${primaryColor};">
+                        <h1 class="text-3xl font-bold tracking-tight uppercase" style="color: ${primaryColor};">${cvData.fullName || 'Tu Nombre'}</h1>
+                        <p class="text-lg font-medium text-gray-600 mt-1">${cvData.jobTitle || 'Título Profesional'}</p>
+                        
+                        <!-- Contact Info Line -->
+                        <div class="flex flex-wrap gap-y-1 gap-x-4 text-xs text-gray-600 mt-3">
+                            ${cvData.email ? `<span>✉️ ${cvData.email}</span>` : ''}
+                            ${cvData.phone ? `<span>📞 ${cvData.phone}</span>` : ''}
+                            ${cvData.location ? `<span>📍 ${cvData.location}</span>` : ''}
+                            ${cvData.website ? `<span>🌐 ${cvData.website}</span>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    ${cvData.summary ? `
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: ${primaryColor};">Perfil Profesional</h2>
+                            <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">${cvData.summary}</p>
+                        </div>
+                    ` : ''}
+
+                    <!-- Experience -->
+                    ${cvData.experiences.length > 0 ? `
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-3 border-b border-gray-200 pb-1" style="color: ${primaryColor};">Experiencia Laboral</h2>
+                            <div class="space-y-4">
+                                ${cvData.experiences.map(exp => `
+                                    <div class="page-break">
+                                        <div class="flex justify-between items-baseline">
+                                            <h3 class="text-sm font-bold text-gray-800">${exp.role}</h3>
+                                            <span class="text-xs text-gray-500 font-medium">${exp.period}</span>
+                                        </div>
+                                        <div class="text-xs font-semibold text-gray-600 mb-1.5">${exp.company} ${exp.location ? `• ${exp.location}` : ''}</div>
+                                        <div class="text-xs text-gray-700 whitespace-pre-line leading-normal">${exp.details}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Education -->
+                    ${cvData.education.length > 0 ? `
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-3 border-b border-gray-200 pb-1" style="color: ${primaryColor};">Educación</h2>
+                            <div class="space-y-3">
+                                ${cvData.education.map(edu => `
+                                    <div class="page-break">
+                                        <div class="flex justify-between items-baseline">
+                                            <h3 class="text-sm font-bold text-gray-800">${edu.degree}</h3>
+                                            <span class="text-xs text-gray-500 font-medium">${edu.period}</span>
+                                        </div>
+                                        <div class="text-xs font-semibold text-gray-600">${edu.institution}</div>
+                                        ${edu.details ? `<p class="text-xs text-gray-600 mt-0.5">${edu.details}</p>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Skills & Additional Info -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                        <!-- Left Column: Technical Skills -->
+                        ${cvData.hardSkills.length > 0 ? `
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: ${primaryColor};">Habilidades Técnicas</h2>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${cvData.hardSkills.map(skill => `
+                                        <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-800 rounded font-medium">${skill}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Right Column: Soft Skills & Languages -->
+                        <div>
+                            ${cvData.softSkills.length > 0 ? `
+                                <div class="mb-3">
+                                    <h2 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: ${primaryColor};">Competencias</h2>
+                                    <p class="text-xs text-gray-700">${cvData.softSkills.join(' • ')}</p>
+                                </div>
+                            ` : ''}
+
+                            ${cvData.languages.length > 0 ? `
+                                <div>
+                                    <h2 class="text-xs font-bold uppercase tracking-wider mb-1" style="color: ${primaryColor};">Idiomas</h2>
+                                    <p class="text-xs text-gray-700">${cvData.languages.join(', ')}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Certifications -->
+                    ${cvData.certifications ? `
+                        <div class="border-t border-gray-200 pt-3">
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-1" style="color: ${primaryColor};">Certificaciones y Cursos</h2>
+                            <div class="text-xs text-gray-700 whitespace-pre-line leading-relaxed">${cvData.certifications}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderMinimalLayout(primaryColor) {
+            return `
+                <div class="space-y-6 font-serif">
+                    <div class="text-center border-b pb-4 border-gray-300">
+                        <h1 class="text-3xl font-bold tracking-normal uppercase text-gray-900">${cvData.fullName || 'Tu Nombre'}</h1>
+                        <p class="text-sm italic text-gray-600 mt-1">${cvData.jobTitle || 'Título Profesional'}</p>
+                        <div class="flex justify-center flex-wrap gap-3 text-xs text-gray-600 mt-2 font-sans">
+                            ${cvData.location ? `<span>${cvData.location}</span>` : ''}
+                            ${cvData.phone ? `<span>• ${cvData.phone}</span>` : ''}
+                            ${cvData.email ? `<span>• ${cvData.email}</span>` : ''}
+                            ${cvData.website ? `<span>• ${cvData.website}</span>` : ''}
+                        </div>
+                    </div>
+
+                    ${cvData.summary ? `
+                        <div class="font-sans text-xs sm:text-sm text-gray-700 leading-relaxed italic text-center max-w-xl mx-auto">
+                            "${cvData.summary}"
+                        </div>
+                    ` : ''}
+
+                    ${cvData.experiences.length > 0 ? `
+                        <div class="font-sans">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-center border-b border-gray-200 pb-1 mb-4" style="color: ${primaryColor};">Experiencia Profesional</h2>
+                            <div class="space-y-4">
+                                ${cvData.experiences.map(exp => `
+                                    <div class="page-break">
+                                        <div class="flex justify-between items-baseline">
+                                            <span class="text-sm font-bold text-gray-900">${exp.role}</span>
+                                            <span class="text-xs text-gray-500">${exp.period}</span>
+                                        </div>
+                                        <div class="text-xs italic text-gray-700 mb-1">${exp.company} ${exp.location ? `, ${exp.location}` : ''}</div>
+                                        <div class="text-xs text-gray-700 whitespace-pre-line leading-relaxed">${exp.details}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${cvData.education.length > 0 ? `
+                        <div class="font-sans">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-center border-b border-gray-200 pb-1 mb-3" style="color: ${primaryColor};">Formación Académica</h2>
+                            <div class="space-y-2">
+                                ${cvData.education.map(edu => `
+                                    <div class="flex justify-between text-xs">
+                                        <div>
+                                            <span class="font-bold text-gray-800">${edu.degree}</span> – <span class="text-gray-600">${edu.institution}</span>
+                                        </div>
+                                        <span class="text-gray-500">${edu.period}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="font-sans grid grid-cols-2 gap-4 border-t border-gray-200 pt-3 text-xs">
+                        <div>
+                            <span class="font-bold text-gray-800 block mb-1">Habilidades Destacadas:</span>
+                            <p class="text-gray-700">${cvData.hardSkills.concat(cvData.softSkills).join(', ')}</p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-800 block mb-1">Idiomas & Otros:</span>
+                            <p class="text-gray-700">${cvData.languages.join(' • ')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTwoColumnLayout(primaryColor) {
+            return `
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Left Sidebar (4 Cols) -->
+                    <div class="col-span-4 bg-gray-50 p-4 rounded-lg space-y-5 text-xs">
+                        <div>
+                            <h1 class="text-xl font-bold leading-tight" style="color: ${primaryColor};">${cvData.fullName || 'Tu Nombre'}</h1>
+                            <p class="text-xs font-medium text-gray-600 mt-1">${cvData.jobTitle || 'Título'}</p>
+                        </div>
+
+                        <div class="space-y-1.5 text-gray-700 text-[11px]">
+                            ${cvData.email ? `<div class="break-all">✉️ ${cvData.email}</div>` : ''}
+                            ${cvData.phone ? `<div>📞 ${cvData.phone}</div>` : ''}
+                            ${cvData.location ? `<div>📍 ${cvData.location}</div>` : ''}
+                            ${cvData.website ? `<div class="break-all">🌐 ${cvData.website}</div>` : ''}
+                        </div>
+
+                        ${cvData.hardSkills.length > 0 ? `
+                            <div>
+                                <h2 class="font-bold uppercase text-[10px] tracking-wider mb-2 border-b pb-1" style="color: ${primaryColor};">Habilidades Técnicas</h2>
+                                <ul class="list-disc list-inside space-y-1 text-gray-700 text-[11px]">
+                                    ${cvData.hardSkills.map(s => `<li>${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+
+                        ${cvData.languages.length > 0 ? `
+                            <div>
+                                <h2 class="font-bold uppercase text-[10px] tracking-wider mb-1 border-b pb-1" style="color: ${primaryColor};">Idiomas</h2>
+                                <p class="text-gray-700 text-[11px]">${cvData.languages.join('<br>')}</p>
+                            </div>
+                        ` : ''}
+
+                        ${cvData.certifications ? `
+                            <div>
+                                <h2 class="font-bold uppercase text-[10px] tracking-wider mb-1 border-b pb-1" style="color: ${primaryColor};">Certificaciones</h2>
+                                <div class="text-[11px] text-gray-700 whitespace-pre-line">${cvData.certifications}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Right Content Area (8 Cols) -->
+                    <div class="col-span-8 space-y-5">
+                        ${cvData.summary ? `
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider border-b pb-1 mb-2" style="color: ${primaryColor};">Perfil</h2>
+                                <p class="text-xs text-gray-700 leading-relaxed">${cvData.summary}</p>
+                            </div>
+                        ` : ''}
+
+                        ${cvData.experiences.length > 0 ? `
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider border-b pb-1 mb-3" style="color: ${primaryColor};">Experiencia Laboral</h2>
+                                <div class="space-y-4">
+                                    ${cvData.experiences.map(exp => `
+                                        <div>
+                                            <div class="flex justify-between items-baseline">
+                                                <h3 class="text-xs font-bold text-gray-800">${exp.role}</h3>
+                                                <span class="text-[10px] text-gray-500">${exp.period}</span>
+                                            </div>
+                                            <div class="text-[11px] font-semibold text-gray-600 mb-1">${exp.company}</div>
+                                            <div class="text-xs text-gray-700 whitespace-pre-line leading-normal">${exp.details}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${cvData.education.length > 0 ? `
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider border-b pb-1 mb-2" style="color: ${primaryColor};">Educación</h2>
+                                <div class="space-y-2">
+                                    ${cvData.education.map(edu => `
+                                        <div>
+                                            <div class="flex justify-between text-xs font-bold text-gray-800">
+                                                <span>${edu.degree}</span>
+                                                <span class="text-[10px] font-normal text-gray-500">${edu.period}</span>
+                                            </div>
+                                            <div class="text-[11px] text-gray-600">${edu.institution}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAccentLayout(primaryColor) {
+            return `
+                <div class="space-y-5">
+                    <!-- Top Colored Banner Header -->
+                    <div class="p-6 rounded-lg text-white space-y-2" style="background-color: ${primaryColor};">
+                        <h1 class="text-3xl font-bold tracking-tight">${cvData.fullName || 'Tu Nombre'}</h1>
+                        <p class="text-base font-light opacity-90">${cvData.jobTitle || 'Título Profesional'}</p>
+                        <div class="flex flex-wrap gap-4 text-xs opacity-80 pt-2 border-t border-white/20">
+                            ${cvData.email ? `<span>✉️ ${cvData.email}</span>` : ''}
+                            ${cvData.phone ? `<span>📞 ${cvData.phone}</span>` : ''}
+                            ${cvData.location ? `<span>📍 ${cvData.location}</span>` : ''}
+                        </div>
+                    </div>
+
+                    ${cvData.summary ? `
+                        <div class="bg-gray-50 p-3 rounded-md text-xs sm:text-sm text-gray-700 leading-relaxed border-l-4" style="border-color: ${primaryColor};">
+                            ${cvData.summary}
+                        </div>
+                    ` : ''}
+
+                    ${cvData.experiences.length > 0 ? `
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-3 px-2 py-1 bg-gray-100 rounded inline-block" style="color: ${primaryColor};">Experiencia de Impacto</h2>
+                            <div class="space-y-4 mt-2">
+                                ${cvData.experiences.map(exp => `
+                                    <div class="border-l-2 pl-3 ml-1 space-y-1" style="border-color: ${primaryColor}40;">
+                                        <div class="flex justify-between items-baseline">
+                                            <h3 class="text-sm font-bold text-gray-800">${exp.role}</h3>
+                                            <span class="text-xs font-semibold text-gray-500">${exp.period}</span>
+                                        </div>
+                                        <div class="text-xs font-semibold text-gray-600">${exp.company} ${exp.location ? `• ${exp.location}` : ''}</div>
+                                        <div class="text-xs text-gray-700 whitespace-pre-line leading-relaxed">${exp.details}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        ${cvData.education.length > 0 ? `
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: ${primaryColor};">Formación Académica</h2>
+                                ${cvData.education.map(edu => `
+                                    <div class="mb-2 text-xs">
+                                        <div class="font-bold text-gray-800">${edu.degree}</div>
+                                        <div class="text-gray-600">${edu.institution} (${edu.period})</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: ${primaryColor};">Skills & Idiomas</h2>
+                            <p class="text-xs text-gray-700"><strong>Técnicas:</strong> ${cvData.hardSkills.join(', ')}</p>
+                            <p class="text-xs text-gray-700 mt-1"><strong>Idiomas:</strong> ${cvData.languages.join(', ')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize Analytical Chart Visualizations
+        function initCharts() {
+            // Chart 1: ATS Completeness Score (Doughnut Gauge)
+            const atsCtx = document.getElementById('atsGaugeChart').getContext('2d');
+            atsChartInstance = new Chart(atsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completado', 'Pendiente'],
+                    datasets: [{
+                        data: [75, 25],
+                        backgroundColor: ['#2C3E35', '#E8E2D9'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+
+            // Chart 2: Skills Balance Radar Chart
+            const radarCtx = document.getElementById('skillsRadarChart').getContext('2d');
+            radarChartInstance = new Chart(radarCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Exp. Laboral', 'Hard Skills', 'Soft Skills', 'Educación', 'Idiomas/Cursos'],
+                    datasets: [{
+                        data: [4, 5, 3, 2, 3],
+                        backgroundColor: [
+                            'rgba(44, 62, 53, 0.7)',
+                            'rgba(122, 139, 123, 0.7)',
+                            'rgba(200, 141, 102, 0.7)',
+                            'rgba(55, 65, 81, 0.7)',
+                            'rgba(140, 58, 39, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { display: false }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dynamically recalculate ATS metrics & updates charts
+        function updateCharts() {
+            if (!atsChartInstance || !radarChartInstance) return;
+
+            // Calculate ATS score based on profile completeness
+            let score = 0;
+            let recommendations = [];
+
+            if (cvData.fullName && cvData.fullName.length > 3) score += 15;
+            else recommendations.push('• Añade tu nombre completo.');
+
+            if (cvData.email && cvData.phone) score += 15;
+            else recommendations.push('• Incluye email y teléfono de contacto.');
+
+            if (cvData.summary && cvData.summary.length > 50) score += 20;
+            else recommendations.push('• Amplía tu extracto profesional (>50 caracteres).');
+
+            if (cvData.experiences.length >= 2) score += 25;
+            else if (cvData.experiences.length === 1) score += 15;
+            else recommendations.push('• Agrega al menos 2 experiencias laborales.');
+
+            if (cvData.hardSkills.length >= 4) score += 15;
+            else recommendations.push('• Listar mínimo 4 habilidades técnicas clave.');
+
+            if (cvData.education.length >= 1) score += 10;
+
+            // Update Doughnut ATS
+            atsChartInstance.data.datasets[0].data = [score, 100 - score];
+            atsChartInstance.data.datasets[0].backgroundColor[0] = score > 80 ? '#2C3E35' : (score > 50 ? '#C88D66' : '#DC2626');
+            atsChartInstance.update();
+
+            document.getElementById('ats-rating-text').innerText = `Optimización ATS: ${score}%`;
+            
+            const recEl = document.getElementById('ats-recommendations');
+            if (recommendations.length === 0) {
+                recEl.innerHTML = '<li class="text-green-700 font-medium">✨ ¡Excelente! Tu CV cuenta con una estructura altamente optimizada para ATS.</li>';
+            } else {
+                recEl.innerHTML = recommendations.map(r => `<li>${r}</li>`).join('');
+            }
+
+            // Update Radar Chart Data
+            radarChartInstance.data.datasets[0].data = [
+                cvData.experiences.length * 2.5,
+                cvData.hardSkills.length,
+                cvData.softSkills.length,
+                cvData.education.length * 3,
+                cvData.languages.length + (cvData.certifications ? 2 : 0)
+            ];
+            radarChartInstance.update();
+        }
+
+        // Action Handlers
+        function loadSampleData() {
+            cvData = {
+                fullName: "María Fernanda Torres",
+                jobTitle: "Directora de Marketing Digital & Estrategia",
+                email: "mf.torres@ejemplo.com",
+                phone: "+34 654 321 098",
+                location: "Madrid, España",
+                website: "linkedin.com/in/mftorres-mkt",
+                summary: "Especialista en Marketing Digital con más de 7 años liderando campañas omnicanal e incrementando el ROI en sectores SaaS y Retail. Experta en análisis de datos de conversión, SEO/SEM y gestión de presupuesto estratégico superior a 1M€.",
+                hardSkills: ["Google Analytics 4", "SEO / SEM", "HubSpot CRM", "Facebook & Ads Manager", "SQL para Marketing", "A/B Testing"],
+                softSkills: ["Estrategia Creativa", "Liderazgo de Equipos", "Gestión de Presupuestos", "Negociación con Proveedores"],
+                languages: ["Español (Nativo)", "Inglés (C2 Bilingüe)"],
+                certifications: "• Google Analytics Certified Professional (2023)\n• HubSpot Inbound Marketing Master (2022)",
+                experiences: [
+                    {
+                        id: 101,
+                        role: "Head of Marketing",
+                        company: "GrowthScale Media",
+                        period: "2020 – Presente",
+                        location: "Madrid, España",
+                        details: "• Lidero un equipo de 6 especialistas gestionando un presupuesto anual de 1.2M€.\n• Incrementé la adquisición de usuarios calificados en un 35% año contra año.\n• Rediseñé el embudo de conversión reduciendo el costo de adquisición (CAC) en un 22%."
+                    },
+                    {
+                        id: 102,
+                        role: "Especialista Senior en Growth",
+                        company: "E-Commerce Ventures",
+                        period: "2017 – 2020",
+                        location: "Barcelona, España",
+                        details: "• Ejecuté estrategias de contenido y campañas pagadas escalando las ventas mensuales un 150%.\n• Coordiné pruebas A/B continuas en landing pages mejorando la tasa de conversión global del 2.1% al 3.8%."
+                    }
+                ],
+                education: [
+                    {
+                        id: 201,
+                        degree: "Máster en Marketing Digital & Analítica",
+                        institution: "ESIC Business & Marketing School",
+                        period: "2016 – 2017",
+                        details: "Graduada con Honores por el proyecto final de estrategia omnicanal."
+                    },
+                    {
+                        id: 202,
+                        degree: "Licenciatura en Publicidad y Relaciones Públicas",
+                        institution: "Universidad Complutense de Madrid",
+                        period: "2012 – 2016",
+                        details: ""
+                    }
+                ],
+                style: {
+                    template: "accent",
+                    primaryColor: "#8C3A27"
+                }
+            };
+            populateForm();
+            setTemplateStyle(cvData.style.template);
+            setThemeColor(cvData.style.primaryColor);
+        }
+
+        function resetForm() {
+            if (confirm('¿Estás seguro de reiniciar los datos del CV?')) {
+                cvData = {
+                    fullName: "",
+                    jobTitle: "",
+                    email: "",
+                    phone: "",
+                    location: "",
+                    website: "",
+                    summary: "",
+                    hardSkills: [],
+                    softSkills: [],
+                    languages: [],
+                    certifications: "",
+                    experiences: [],
+                    education: [],
+                    style: {
+                        template: "modern",
+                        primaryColor: "#2C3E35"
+                    }
+                };
+                populateForm();
+                updateCV();
+            }
+        }
+    </script>
+</body>
+</html>
